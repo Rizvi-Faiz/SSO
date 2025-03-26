@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  # Express SSO Server
+  sso-server:
+    build:
+      context: ./sso-auth-server
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./sso-auth-server:/app
+      - /app/node_modules
+    networks:
+      - sso-network
+
+  # Next.js Client App 1
+  client1:
+    build:
+      context: ./client-app-1
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SSO_SERVER_URL=http://sso-server:4000
+    volumes:
+      - ./client-app-1:/app
+      - /app/.next
+      - /app/node_modules
+    depends_on:
+      - sso-server
+    networks:
+      - sso-network
+
+  # Next.js Client App 2
+  client2:
+    build:
+      context: ./client-app-2
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_SSO_SERVER_URL=http://sso-server:4000
+    volumes:
+      - ./client-app-2:/app
+      - /app/.next
+      - /app/node_modules
+    depends_on:
+      - sso-server
+    networks:
+      - sso-network
+
+networks:
+  sso-network:
+    driver: bridge
